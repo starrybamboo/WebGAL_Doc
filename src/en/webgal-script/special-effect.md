@@ -28,7 +28,7 @@ pixiPerform:rain; // Add a rain effect
 
 Note: After the effect takes effect, if it is not re initialized, the effect will continue to run.
 
-### List of Built-in Effects
+### Default Template Effects
 
 | Effect | Command |
 | :--- | :--- |
@@ -36,6 +36,8 @@ Note: After the effect takes effect, if it is not re initialized, the effect wil
 | Snow | pixiPerform:snow; |
 | Heavy Snow | pixiPerform:heavySnow; |
 | Cherry Blossoms | pixiPerform:cherryBlossoms; |
+
+These four effects are runtime scripts in the default game's `game/pixi-performs/` directory. Edit the matching `.js` file to change values such as speed, particle count, scale, and angle, then refresh the preview. Rebuilding the engine is not required.
 
 ### Superimpose Effects
 
@@ -50,49 +52,66 @@ pixiPerform:snow;
 
 Initialize using `pixiInit` to clear all effects that have been applied.
 
-## Adding Custom Effects
+## Adding Custom Effects Without Rebuilding
 
-You can download the source code, then find `/Core/gameScripts/pixiPerformScripts/` and create a new `PIXI.Container` to create the effects you need.
+In a WebGAL version that supports runtime effects, add a JavaScript file directly to the game directory. You do not need to modify the engine source, maintain an `index.js`, or run `yarn build`.
 
-The effects container is divided into a foreground container and a background container, and the foreground container is used here as an example.
+The effect name maps directly to its file:
+
+``` text
+pixiPerform:myPerform;
+    -> game/pixi-performs/myPerform.js
+
+pixiPerform:weather/rain;
+    -> game/pixi-performs/weather/rain.js
+```
+
+For example, put this in `game/pixi-performs/myPerform.js`:
 
 ``` ts
-// Get the current Pixi effect Container
-const effectsContainer = WebGAL.gameplay.pixiStage!.foregroundEffectsContainer!;
-// Call the Pixi App method, which may be useful for determining screen size, etc.
-const app = RUNTIME_GAMEPLAY.pixiStage!.currentApp!;
-// Create a container for custom effects
-const container = new PIXI.Container();
-// Add effects
-effectsContainer.addChild(container);
+(() => {
+  let instanceId = 0;
+
+  window.WebGALPixiPerform.register('myPerform', {
+    fg: () => {
+      const PIXI = window.PIXI;
+      const stage = window.PIXIapp;
+      const container = new PIXI.Container();
+      const sprite = PIXI.Sprite.from('./game/tex/my-effect.png');
+
+      sprite.anchor.set(0.5);
+      sprite.position.set(stage.stageWidth / 2, stage.stageHeight / 2);
+      container.addChild(sprite);
+      stage.foregroundEffectsContainer.addChild(container);
+
+      const tickerKey = `runtime-my-perform-${++instanceId}`;
+      stage.registerAnimation(
+        {
+          setStartState: () => {},
+          setEndState: () => {},
+          tickerFunc: (delta) => {
+            sprite.rotation += 0.01 * delta;
+          },
+        },
+        tickerKey,
+      );
+      stage.requestRender();
+
+      return { container, tickerKey };
+    },
+  });
+})();
 ```
 
-Texture files can be placed in the `game/tex` directory.
+Textures can be placed in `game/tex`. `fg` uses the foreground layer. For a background effect, use `bg` and add the container to `stage.backgroundEffectsContainer`.
 
-Then, import the `effect registration method` at the beginning of the file to register the new effect you wrote.
+Every call must synchronously return `{ container, tickerKey }`, and each animated instance should use a unique `tickerKey`. WebGAL uses these values to destroy the container and remove the animation when the effect is cleared.
 
-At the end of the file, use it to register your effect, the first parameter is the effect name, and the second parameter is the method to call the effect.
-
-``` ts
-import {registerPerform} from '../pixiPerformManager';
-
-// Let's say this is your effect
-function myPerform() {
-    // ...
-}
-
-// Register
-registerPerform('myPerform', { fg: () => myPerform(parameters) });
-```
-
-Finally, compile WebGAL with support for your custom effects
-
-``` shell
-yarn run build;
-```
-
-This way, you can call your effects in the script
+Initialize Pixi before calling the effect whose name matches the file:
 
 ``` ws
+pixiInit;
 pixiPerform:myPerform;
 ```
+
+After editing the effect file, refresh the preview page. Rebuilding the engine is not required. Effect files are trusted JavaScript executed in the game page; do not install effects from an untrusted source.

@@ -28,7 +28,7 @@ pixiPerform:rain; // 雨のエフェクトを追加する
 
 注意：エフェクトを適用した後、再度初期化しないと、エフェクトは常に実行されます。
 
-### プリセットエフェクト一覧
+### デフォルトテンプレートのエフェクト
 
 | エフェクト | コマンド                        |
 | :--- | :-------------------------- |
@@ -36,6 +36,8 @@ pixiPerform:rain; // 雨のエフェクトを追加する
 | 雪 | pixiPerform:snow;           |
 | 大雪 | pixiPerform:heavySnow;    |
 | 桜 | pixiPerform:cherryBlossoms; |
+
+これら 4 つのエフェクトは、デフォルトゲームの `game/pixi-performs/` にあるランタイムスクリプトです。対応する `.js` ファイルで速度、パーティクル数、スケール、角度などを変更し、プレビューを更新すれば反映されます。エンジンの再ビルドは不要です。
 
 ### エフェクトを重ねる
 
@@ -50,49 +52,66 @@ pixiPerform:snow;
 
 `pixiInit` を使用して初期化します。これにより、適用されているすべてエフェクトを消去できます。
 
-## カスタムエフェクトを追加する
+## 再ビルド不要のカスタムエフェクト
 
-ソースコードをダウンロードして `/Core/gameScripts/pixiPerformScripts/` に移動し、必要なエフェクトを作成するために `PIXI.Container` を新規作成します。
+ランタイムエフェクトに対応した WebGAL では、ゲームディレクトリに JavaScript ファイルを追加するだけで使用できます。エンジンソースの変更、`index.js` の管理、`yarn build` は必要ありません。
 
-エフェクトコンテナは前景コンテナと背景コンテナに分割され、ここでは前景コンテナを例としています。
+エフェクト名は次のようにファイルへ対応します。
+
+``` text
+pixiPerform:myPerform;
+    -> game/pixi-performs/myPerform.js
+
+pixiPerform:weather/rain;
+    -> game/pixi-performs/weather/rain.js
+```
+
+例として、`game/pixi-performs/myPerform.js` に次を記述します。
 
 ``` ts
-// 現在の Pixi エフェクト Container を取得する
-const effectsContainer = WebGAL.gameplay.pixiStage!.foregroundEffectsContainer!;
-// Pixi App の呼び出し方法で、画面のサイズなどを決定するのに役立ちます
-const app = RUNTIME_GAMEPLAY.pixiStage!.currentApp!;
-// カスタムエフェクトのコンテナを作成する
-const container = new PIXI.Container();
-// エフェクトを追加する
-effectsContainer.addChild(container);
+(() => {
+  let instanceId = 0;
+
+  window.WebGALPixiPerform.register('myPerform', {
+    fg: () => {
+      const PIXI = window.PIXI;
+      const stage = window.PIXIapp;
+      const container = new PIXI.Container();
+      const sprite = PIXI.Sprite.from('./game/tex/my-effect.png');
+
+      sprite.anchor.set(0.5);
+      sprite.position.set(stage.stageWidth / 2, stage.stageHeight / 2);
+      container.addChild(sprite);
+      stage.foregroundEffectsContainer.addChild(container);
+
+      const tickerKey = `runtime-my-perform-${++instanceId}`;
+      stage.registerAnimation(
+        {
+          setStartState: () => {},
+          setEndState: () => {},
+          tickerFunc: (delta) => {
+            sprite.rotation += 0.01 * delta;
+          },
+        },
+        tickerKey,
+      );
+      stage.requestRender();
+
+      return { container, tickerKey };
+    },
+  });
+})();
 ```
 
-テクスチャ ファイルは `game/tex` ディレクトリに配置できます。
+テクスチャは `game/tex` に配置できます。`fg` は前景レイヤーを使用します。背景エフェクトには `bg` を使い、コンテナを `stage.backgroundEffectsContainer` に追加します。
 
-次に、ファイルの先頭で `エフェクト登録メソッド` をインポートして、新しく記述したエフェクトを登録します。
+各呼び出しは `{ container, tickerKey }` を同期的に返す必要があり、アニメーションの各インスタンスには一意の `tickerKey` を使用します。WebGAL はエフェクトの解除時にこれらの値を使ってコンテナとアニメーションを削除します。
 
-ファイルの末尾で登録したエフェクトを使用します。最初のパラメータはエフェクト名、2 番目のパラメータはエフェクトを呼び出すメソッドです。
-
-``` ts
-import {registerPerform} from '../pixiPerformManager';
-
-// これがエフェクトだと仮定します
-function myPerform() {
-    // ...
-}
-
-// 登録する
-registerPerform('myPerform', { fg: () => myPerform(パラメータ) });
-```
-
-最後に、カスタムエフェクトをサポートする WebGAL をコンパイルします。
-
-``` shell
-yarn run build;
-```
-
-これで、スクリプトでエフェクトを呼び出すことができます。
+Pixi を初期化してから、ファイル名に対応するエフェクトを呼び出します。
 
 ``` ws
+pixiInit;
 pixiPerform:myPerform;
 ```
+
+エフェクトファイルを編集した後は、プレビューページを更新すれば反映されます。エンジンの再ビルドは不要です。エフェクトファイルはゲームページで実行される信頼済み JavaScript です。信頼できないソースのファイルは使用しないでください。

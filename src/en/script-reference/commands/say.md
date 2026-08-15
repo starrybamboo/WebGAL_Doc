@@ -138,6 +138,6 @@ CharacterA:Hello, world! -figureId=aaa;
 
 ## Mouth Sync Workflow
 
-The `vocal`, `left`, `right`, `center`, and `figureId` parameters are the driving side of image figure mouth sync. Before using them, register differential images through `changeFigure`.
+`vocal` selects an audio timeline, while `left`, `right`, `center`, or `figureId` selects the character target for the unified facial runtime. For an image character, define a `facialRig` in the character directory's `figure.json` and place it with the `character` command. Full-image mouth differentials can no longer be registered through `changeFigure`. This workflow does not apply to Live2D or Spine.
 
-See [Animation Effects - Image Sprite Mouth Sync](../../webgal-script/animation.md#image-sprite-mouth-sync) for the full workflow.
+See [Animation Effects - Facial Animation for Image Characters](../../webgal-script/animation.md#facial-animation-for-image-characters) for the full workflow.

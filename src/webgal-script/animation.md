@@ -184,49 +184,38 @@ setTransition: -target=fig-center -enter=enter-from-bottom -exit=exit;
 如果不在立绘或背景设置后立即执行进出场效果的设置，等到图像已经进场了，再覆盖进场动画就没有意义了。但如果此时图像还没有出场，设置的出场动画仍有意义。其会在立绘或背景出场时正确地被应用。
 :::
 
-## 图片立绘嘴型同步
+## 图片角色的面部动画
 
-WebGAL 支持通过差分图片实现图片立绘的嘴型同步动画。
+图片角色的眨眼与嘴型应在角色目录的 `figure.json` 中声明 `facialRig`，再通过 `character` 命令上场。底图使用睁眼、闭嘴状态，眼睛和嘴巴只需提供小型替换片：
 
-### 准备差分图片
-
-为角色准备以下差分立绘：
-
-- 默认图（通常为闭嘴状态）
-- 张嘴差分
-- 半张嘴差分
-- 闭嘴差分（可与默认图相同）
-- 可选：睁眼差分、闭眼差分
-
-### 最小示例
-
-**1. 注册差分并上场立绘**
-
-```webgal
-changeFigure:1/normal.png -id=charA -mouthOpen=1/mouth_open.png -mouthHalfOpen=1/mouth_half.png -mouthClose=1/normal.png;
+```json
+{
+  "Version": 1,
+  "canvas": { "width": 1024, "height": 1536 },
+  "components": {
+    "base": { "src": "base.png", "x": 0, "y": 0 }
+  },
+  "presets": {
+    "default": {
+      "items": ["base"],
+      "facialRig": {
+        "eyes": {
+          "x": 485, "y": 228, "width": 168, "height": 113,
+          "half": "eyes-half.png", "closed": "eyes-closed.png"
+        },
+        "mouth": {
+          "x": 531, "y": 317, "width": 82, "height": 73,
+          "halfOpen": "mouth-half.png", "open": "mouth-open.png"
+        }
+      }
+    }
+  }
+}
 ```
 
-**2. 播放语音并驱动嘴型**
-
 ```webgal
-; 通过 id 驱动自由立绘
+character:hero/default -id=charA;
 角色A:你好，世界！ -vocal=charA_hello.wav -figureId=charA;
 ```
 
-引擎会根据语音的实时音量，在 `mouthOpen`、`mouthHalfOpen`、`mouthClose` 三个差分之间切换，模拟嘴型动画。
-
-### 位置立绘示例
-
-```webgal
-; 上场中间立绘并注册差分
-changeFigure:1/normal.png -mouthOpen=1/mouth_open.png -mouthHalfOpen=1/mouth_half.png -mouthClose=1/normal.png;
-
-; 驱动中间立绘嘴型
-角色A:你好，世界！ -vocal=charA_hello.wav -center;
-```
-
-### 限制
-
-- 使用 `vocal` 时，引擎会根据语音音量驱动嘴型；未提供 `vocal` 但指定了 `figureId`、`left`、`right` 或 `center` 时，引擎会用模拟音量驱动目标立绘的嘴型差分。
-- 此功能仅适用于图片立绘。Live2D 立绘有独立的嘴型参数体系，不使用此差分方式。
-- 眨眼差分（`eyesOpen`、`eyesClose`）可选，注册后引擎会自动触发随机眨眼动画。
+统一面部运行时会组合独立的眨眼和嘴型轨道；有语音时按音频时间线驱动嘴型，无语音时按文本节奏驱动。旧的 `changeFigure` 整图嘴型、眼睛差分参数已移除，请将相关素材迁移到 `facialRig`。该运行时只适用于通过 `character` 上场的位图 `facialRig`，不接管 Live2D 或 Spine。

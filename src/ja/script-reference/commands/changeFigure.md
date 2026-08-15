@@ -183,31 +183,9 @@ changeFigure:1/open_eyes.png -clear;
 changeFigure:1/open_eyes.png -none;
 ```
 
-### animationFlag
-- 文字列
+### 画像キャラクターの顔アニメーション移行
 
-画像立ち絵の差分アニメーションフラグです。現在のクラウドエンジンはこの値を `figureAssociatedAnimation` に書き込みますが、口パク同期とまばたきアニメーションは実際には対象立ち絵 id に基づき、`mouthOpen`、`mouthHalfOpen`、`mouthClose`、`eyesOpen`、`eyesClose` などの差分リソースを読み取ります。`animationFlag` 自体はまだ後続ロジックでは読み取られていません。
-
-### mouthOpen / mouthHalfOpen / mouthClose
-- 文字列
-
-画像立ち絵の口開き、半開き、口閉じ差分パスを指定します。
-
-```webgal
-changeFigure:1/open_eyes.png -mouthOpen=1/open_mouth.png;
-changeFigure:1/open_eyes.png -mouthHalfOpen=1/halfopen_mouth.png;
-changeFigure:1/open_eyes.png -mouthClose=1/closed_mouth.png;
-```
-
-### eyesOpen / eyesClose
-- 文字列
-
-画像立ち絵の目開き、目閉じ差分パスを指定します。
-
-```webgal
-changeFigure:1/open_eyes.png -eyesOpen=1/open_eyes.png;
-changeFigure:1/open_eyes.png -eyesClose=1/closed_eyes.png;
-```
+`changeFigure` は、従来の全身画像による口・目差分パラメータを受け付けなくなりました。キャラクターディレクトリの `figure.json` に `facialRig` を定義し、`character` コマンドでキャラクターを表示してください。統一された顔ランタイムが、まばたきと口パクのトラックを合成します。設定例は[画像キャラクターの顔アニメーション](../../webgal-script/animation.md#画像キャラクターの顔アニメーション)を参照してください。
 
 ### motion
 - 文字列

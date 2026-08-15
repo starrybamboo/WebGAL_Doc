@@ -184,49 +184,38 @@ If you execute the statement for setting entrance and exit effects immediately a
 If you do not execute the statement for setting entrance and exit effects immediately after setting the sprite or background, it will be meaningless to override the entrance animation after the image has already entered. However, if the image has not yet entered at this time, the set entrance animation will still be meaningful. It will be applied correctly when the sprite or background enters.
 :::
 
-## Image Sprite Mouth Sync
+## Facial Animation for Image Characters
 
-WebGAL supports mouth sync animation for image sprites through differential images.
+Define blinking and mouth shapes with a `facialRig` in the character directory's `figure.json`, then place the character on stage with the `character` command. Use an eyes-open, mouth-closed base image and provide only small replacement textures for the eyes and mouth:
 
-### Prepare Differential Images
-
-Prepare the following differential sprites for the character:
-
-- Default image, usually the closed-mouth state
-- Open-mouth differential image
-- Half-open-mouth differential image
-- Closed-mouth differential image, which can be the same as the default image
-- Optional: eyes-open and eyes-closed differential images
-
-### Minimal Example
-
-**1. Register differential images and show the sprite**
-
-```webgal
-changeFigure:1/normal.png -id=charA -mouthOpen=1/mouth_open.png -mouthHalfOpen=1/mouth_half.png -mouthClose=1/normal.png;
+```json
+{
+  "Version": 1,
+  "canvas": { "width": 1024, "height": 1536 },
+  "components": {
+    "base": { "src": "base.png", "x": 0, "y": 0 }
+  },
+  "presets": {
+    "default": {
+      "items": ["base"],
+      "facialRig": {
+        "eyes": {
+          "x": 485, "y": 228, "width": 168, "height": 113,
+          "half": "eyes-half.png", "closed": "eyes-closed.png"
+        },
+        "mouth": {
+          "x": 531, "y": 317, "width": 82, "height": 73,
+          "halfOpen": "mouth-half.png", "open": "mouth-open.png"
+        }
+      }
+    }
+  }
+}
 ```
 
-**2. Play voice and drive the mouth shape**
-
 ```webgal
-; Drive a free sprite by id
+character:hero/default -id=charA;
 CharacterA:Hello, world! -vocal=charA_hello.wav -figureId=charA;
 ```
 
-The engine switches between `mouthOpen`, `mouthHalfOpen`, and `mouthClose` according to the real-time voice volume to simulate mouth movement.
-
-### Positioned Sprite Example
-
-```webgal
-; Show the center sprite and register differential images
-changeFigure:1/normal.png -mouthOpen=1/mouth_open.png -mouthHalfOpen=1/mouth_half.png -mouthClose=1/normal.png;
-
-; Drive the center sprite mouth shape
-CharacterA:Hello, world! -vocal=charA_hello.wav -center;
-```
-
-### Limitations
-
-- When `vocal` is used, the engine drives the mouth shape according to voice volume. If `vocal` is not provided but `figureId`, `left`, `right`, or `center` is specified, the engine uses simulated volume to drive the target sprite's mouth differential images.
-- This feature only applies to image sprites. Live2D sprites have an independent mouth-parameter system and do not use this differential-image workflow.
-- Eye-blink differential images (`eyesOpen`, `eyesClose`) are optional. Once registered, the engine automatically triggers random blinking animation.
+The unified facial runtime composes independent blink and mouth tracks. Voice lines drive the mouth from an audio timeline, while unvoiced lines use text timing. The legacy full-image mouth and eye parameters on `changeFigure` have been removed; migrate those assets to `facialRig`. This runtime applies only to bitmap `facialRig` figures placed with `character`; it does not take over Live2D or Spine.

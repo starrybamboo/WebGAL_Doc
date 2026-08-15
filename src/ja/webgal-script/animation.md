@@ -184,49 +184,38 @@ setTransition: -target=fig-center -enter=enter-from-bottom -exit=exit;
 立ち絵や背景を設定した後、すぐに登場・退場エフェクトを設定せずに、画像がすでに登場してから登場アニメーションを上書きしても意味がありません。しかし、この時点で画像がまだ登場していない場合は、設定した登場アニメーションに意味があります。立ち絵や背景が登場する際に正しく適用されます。
 :::
 
-## 画像立ち絵の口パク同期
+## 画像キャラクターの顔アニメーション
 
-WebGAL は差分画像を使って、画像立ち絵の口パク同期アニメーションを実現できます。
+画像キャラクターのまばたきと口パクは、キャラクターディレクトリの `figure.json` に `facialRig` として定義し、`character` コマンドでステージに表示します。ベース画像は目を開き、口を閉じた状態にし、目と口には小さな差し替えテクスチャだけを用意します。
 
-### 差分画像を準備する
-
-キャラクターには次の差分立ち絵を用意してください。
-
-- デフォルト画像（通常は口を閉じた状態）
-- 口開き差分
-- 半開き口差分
-- 口閉じ差分（デフォルト画像と同じでも構いません）
-- 任意: 目開き差分、目閉じ差分
-
-### 最小例
-
-**1. 差分を登録して立ち絵を登場させる**
-
-```webgal
-changeFigure:1/normal.png -id=charA -mouthOpen=1/mouth_open.png -mouthHalfOpen=1/mouth_half.png -mouthClose=1/normal.png;
+```json
+{
+  "Version": 1,
+  "canvas": { "width": 1024, "height": 1536 },
+  "components": {
+    "base": { "src": "base.png", "x": 0, "y": 0 }
+  },
+  "presets": {
+    "default": {
+      "items": ["base"],
+      "facialRig": {
+        "eyes": {
+          "x": 485, "y": 228, "width": 168, "height": 113,
+          "half": "eyes-half.png", "closed": "eyes-closed.png"
+        },
+        "mouth": {
+          "x": 531, "y": 317, "width": 82, "height": 73,
+          "halfOpen": "mouth-half.png", "open": "mouth-open.png"
+        }
+      }
+    }
+  }
+}
 ```
 
-**2. 音声を再生して口パクを駆動する**
-
 ```webgal
-; id で自由立ち絵を駆動する
+character:hero/default -id=charA;
 キャラA:こんにちは、世界！ -vocal=charA_hello.wav -figureId=charA;
 ```
 
-エンジンは音声のリアルタイム音量に応じて、`mouthOpen`、`mouthHalfOpen`、`mouthClose` の 3 つの差分を切り替え、口パクを模擬します。
-
-### 位置立ち絵の例
-
-```webgal
-; 中央立ち絵を登場させ、差分を登録する
-changeFigure:1/normal.png -mouthOpen=1/mouth_open.png -mouthHalfOpen=1/mouth_half.png -mouthClose=1/normal.png;
-
-; 中央立ち絵の口パクを駆動する
-キャラA:こんにちは、世界！ -vocal=charA_hello.wav -center;
-```
-
-### 制限
-
-- `vocal` を使用する場合、エンジンは音声音量に応じて口パクを駆動します。`vocal` がなくても `figureId`、`left`、`right`、`center` のいずれかを指定した場合は、模擬音量で対象立ち絵の口差分を駆動します。
-- この機能は画像立ち絵にのみ適用されます。Live2D 立ち絵には独立した口パクパラメータ体系があり、この差分方式は使用しません。
-- まばたき差分（`eyesOpen`、`eyesClose`）は任意です。登録後、エンジンはランダムまばたきアニメーションを自動的に発火します。
+統一された顔ランタイムは、独立したまばたきと口パクのトラックを合成します。音声付きの台詞では音声タイムラインから、音声なしの台詞ではテキストのタイミングから口パクを駆動します。従来の `changeFigure` による全身画像の口・目差分パラメータは削除されたため、素材を `facialRig` に移行してください。このランタイムは `character` で表示するビットマップの `facialRig` 専用であり、Live2D や Spine は制御しません。

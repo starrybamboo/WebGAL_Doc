@@ -154,6 +154,6 @@ WebGAL 支持声音文件的简化写法。
 
 ## 嘴型同步工作流
 
-`vocal`、`left`、`right`、`center`、`figureId` 参数共同构成图片立绘嘴型同步的驱动端。使用前需先通过 `changeFigure` 注册差分图片。
+`vocal` 决定是否使用音频时间线，`left`、`right`、`center` 或 `figureId` 用于指定由统一面部运行时驱动的目标角色。图片角色应先在角色目录的 `figure.json` 中声明 `facialRig`，再通过 `character` 命令上场；无需也不能通过 `changeFigure` 注册整图嘴型差分。该工作流不适用于 Live2D 或 Spine。
 
-完整工作流请参见[动画效果 - 图片立绘嘴型同步](../../webgal-script/animation.md#图片立绘嘴型同步)。
+完整工作流请参见[动画效果 - 图片角色的面部动画](../../webgal-script/animation.md#图片角色的面部动画)。

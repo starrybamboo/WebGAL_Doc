@@ -202,55 +202,9 @@ changeFigure:1/open_eyes.png -clear;
 changeFigure:1/open_eyes.png -none;
 ```
 
-### animationFlag
-- 字符串
+### 图片角色面部动画迁移
 
-图片立绘差分动画标志。当前云端引擎会将此值写入 `figureAssociatedAnimation`，但嘴型同步和眨眼动画实际按目标立绘 id 读取 `mouthOpen`、`mouthHalfOpen`、`mouthClose`、`eyesOpen`、`eyesClose` 等差分资源；`animationFlag` 本身暂未被后续逻辑读取。
-
-### mouthOpen
-- 字符串
-
-填写图片立绘的路径，作为张嘴时的立绘差分。
-
-```webgal
-changeFigure:1/open_eyes.png -mouthOpen=1/open_mouth.png;
-```
-
-### mouthHalfOpen
-- 字符串
-
-填写图片立绘的路径，作为半张嘴时的立绘差分。
-
-```webgal
-changeFigure:1/open_eyes.png -mouthHalfOpen=1/halfopen_mouth.png;
-```
-
-### mouthClose
-- 字符串
-
-填写图片立绘的路径，作为闭嘴时的立绘差分。
-
-```webgal
-changeFigure:1/open_eyes.png -mouthClose=1/closed_mouth.png;
-```
-
-### eyesOpen
-- 字符串
-
-填写图片立绘的路径，作为睁眼时的立绘差分。
-
-```webgal
-changeFigure:1/open_eyes.png -eyesOpen=1/open_eyes.png;
-```
-
-### eyesClose
-- 字符串
-
-填写图片立绘的路径，作为闭眼时的立绘差分。
-
-```webgal
-changeFigure:1/open_eyes.png -eyesClose=1/closed_eyes.png;
-```
+`changeFigure` 不再接受旧的整图嘴型和眼睛差分参数。请在角色目录的 `figure.json` 中声明 `facialRig`，并使用 `character` 命令上场角色；眨眼和嘴型由统一面部运行时组合驱动。配置示例参见[图片角色的面部动画](../../webgal-script/animation.md#图片角色的面部动画)。
 
 ### motion
 - 字符串

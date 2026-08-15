@@ -183,31 +183,9 @@ changeFigure:1/open_eyes.png -clear;
 changeFigure:1/open_eyes.png -none;
 ```
 
-### animationFlag
-- String
+### Migrating Facial Animation for Image Characters
 
-Image figure differential animation flag. The current cloud engine writes this value to `figureAssociatedAnimation`, but mouth sync and blink animation actually read differential resources such as `mouthOpen`, `mouthHalfOpen`, `mouthClose`, `eyesOpen`, and `eyesClose` by the target figure id. `animationFlag` itself is not read by later logic yet.
-
-### mouthOpen / mouthHalfOpen / mouthClose
-- String
-
-Sets image figure differential paths for open mouth, half-open mouth, and closed mouth.
-
-```webgal
-changeFigure:1/open_eyes.png -mouthOpen=1/open_mouth.png;
-changeFigure:1/open_eyes.png -mouthHalfOpen=1/halfopen_mouth.png;
-changeFigure:1/open_eyes.png -mouthClose=1/closed_mouth.png;
-```
-
-### eyesOpen / eyesClose
-- String
-
-Sets image figure differential paths for open eyes and closed eyes.
-
-```webgal
-changeFigure:1/open_eyes.png -eyesOpen=1/open_eyes.png;
-changeFigure:1/open_eyes.png -eyesClose=1/closed_eyes.png;
-```
+`changeFigure` no longer accepts the legacy full-image mouth and eye parameters. Define a `facialRig` in the character directory's `figure.json` and place the character with the `character` command instead. The unified facial runtime composes the blink and mouth tracks. See [Facial Animation for Image Characters](../../webgal-script/animation.md#facial-animation-for-image-characters) for a configuration example.
 
 ### motion
 - String
